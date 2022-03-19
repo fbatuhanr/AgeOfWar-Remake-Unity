@@ -2,34 +2,47 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TheKnight : MonoBehaviour
 {
-    [SerializeField] [Range(1,10)] private int characterHealth = 3;
-    [SerializeField] [Range(1, 3)] private float characterSpeed = 1f;
+    // Character Specialties
+    [SerializeField] [Range(1,10)] private int health = 3;
+    [SerializeField] [Range(1, 3)] private float movementSpeed = 1f;
 
-    private Vector2 characterMovementDirection;
+    private int currentHealth;
+    private int attackDamage = 1;
+    private float attackRange = 0.5f;
     
-    private SpriteRenderer sprRender;
-    [SerializeField] private Sprite[] idleSprites, walkSprites, attackSprites;
-
+    private Transform attackPoint; // Character attack point reference object, it assigns from child when the game has started.
+    
+    // Character Health UI
+    private Image healthBar;
+    
+    // Character Physic2D Ray & Transform System
+    private Vector2 movementDirection;
+    
+    // Character Animation
+    private SpriteRenderer spriteRenderer;
+    [SerializeField] private Sprite[] idleSprites, walkSprites, attackSprites, deadSprites;
     private int spriteCounter = 0;
     private float spriteDelay = 0;
     
-    private enum CharacterStates
-    {
-        idle=0,
-        walk=1,
-        attack=2
-    }
+    private enum CharacterStates { idle, walk, attack, dead }
 
     private CharacterStates characterState = CharacterStates.idle;
     
     private void Start()
     {
-        characterMovementDirection = transform.CompareTag("friend") ? Vector2.right : Vector2.left;
+        currentHealth = health;
 
-        sprRender = GetComponent<SpriteRenderer>();
+        healthBar = transform.Find("Canvas/HealthBar").GetComponent<Image>();
+        
+        
+        attackPoint = transform.Find("AttackPoint");
+        movementDirection = transform.CompareTag("friend") ? Vector2.right : Vector2.left;
+
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void Update()
@@ -39,13 +52,12 @@ public class TheKnight : MonoBehaviour
 
     private RaycastHit2D DrawRay()
     {
-        
-        Debug.DrawRay(transform.position, transform.TransformDirection(characterMovementDirection)*30f, Color.blue);
+        Debug.DrawRay(transform.position, transform.TransformDirection(movementDirection)*30f, Color.blue);
 
         RaycastHit2D hit = 
             Physics2D.Raycast(
                 transform.position, 
-                transform.TransformDirection(characterMovementDirection), 
+                transform.TransformDirection(movementDirection), 
                 30f);
         
         return hit;
@@ -53,7 +65,7 @@ public class TheKnight : MonoBehaviour
 
     private void RayResult(RaycastHit2D hit)
     {
-        if (hit.collider)
+        if (hit.collider && GetComponent<Collider2D>().enabled)
         {
             // Debug.Log("Hit something!: " + hit.transform.tag + " Range: " + hit.distance);
 
@@ -82,30 +94,81 @@ public class TheKnight : MonoBehaviour
                 CharacterAnimation(walkSprites);
                 break;
             case CharacterStates.attack:
+                HitOverlap();
                 CharacterAnimation(attackSprites);
+                break;
+            case CharacterStates.dead:
+                Die();
+                CharacterAnimation(deadSprites, false);
                 break;
             
             default: CharacterAnimation(idleSprites); break;
         }
     }
 
+    private float hitDelay=0;
+    private void HitOverlap()
+    {
+        hitDelay += Time.fixedDeltaTime;
+        if (hitDelay >= 0.5f)
+        {
+            Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange);
+            foreach (Collider2D enemy in hitEnemies)
+            {
+                if (!enemy.CompareTag(transform.tag))
+                {
+                    Debug.Log("We hit enemy! " + enemy.name);
+                    enemy.GetComponent<TheKnight>().TakeDamage(1);
+                    break;
+                }
+            }
+
+            hitDelay = 0;
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if(attackPoint != null)
+        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+    }
 
     private void CharacterMovement()
     {
-        transform.Translate(characterMovementDirection * characterSpeed * Time.fixedDeltaTime);
+        transform.Translate(movementDirection * movementSpeed * Time.fixedDeltaTime);
     }
     
-    private void CharacterAnimation(Sprite[] animSprites)
+    private void CharacterAnimation(Sprite[] animSprites, bool animLoop=true)
     {
         spriteDelay += Time.fixedDeltaTime;
         if (spriteDelay >= 0.05f)
         {
-            sprRender.sprite = animSprites[spriteCounter++];
-            if (spriteCounter == animSprites.Length) spriteCounter = 0;
+            spriteRenderer.sprite = animSprites[spriteCounter];
+            if (animSprites.Length > spriteCounter+1)
+                spriteCounter++;
+            else if(animLoop)
+                spriteCounter = 0;
 
             spriteDelay = 0;
         }
     }
-    
-    
+
+
+
+    public void TakeDamage(int damage)
+    {
+        currentHealth -= damage;
+        healthBar.fillAmount = (float)currentHealth / (float)health;
+
+        if (currentHealth <= 0)
+        {
+            GetComponent<Collider2D>().enabled = false;
+            characterState = CharacterStates.dead;
+        }
+    }
+
+    private void Die()
+    {
+        
+    }
 }
