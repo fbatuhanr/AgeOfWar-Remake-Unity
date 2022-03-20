@@ -11,8 +11,8 @@ public class TheKnight : MonoBehaviour
     [SerializeField] [Range(1, 3)] private float movementSpeed = 1f;
 
     private int currentHealth;
-    private int attackDamage = 1;
-    private float attackRange = 0.5f;
+    [SerializeField] private int attackDamage = 1;
+    [SerializeField] private float attackRange = 0.5f;
     
     private Transform attackPoint; // Character attack point reference object, it assigns from child when the game has started.
     
@@ -52,13 +52,13 @@ public class TheKnight : MonoBehaviour
 
     private RaycastHit2D DrawRay()
     {
-        Debug.DrawRay(transform.position, transform.TransformDirection(movementDirection)*30f, Color.blue);
+        Debug.DrawRay(transform.position, transform.TransformDirection(movementDirection)*45f, Color.blue);
 
         RaycastHit2D hit = 
             Physics2D.Raycast(
                 transform.position, 
                 transform.TransformDirection(movementDirection), 
-                30f);
+                45f);
         
         return hit;
     }
@@ -118,7 +118,12 @@ public class TheKnight : MonoBehaviour
                 if (!enemy.CompareTag(transform.tag))
                 {
                     Debug.Log("We hit enemy! " + enemy.name);
-                    enemy.GetComponent<TheKnight>().TakeDamage(1);
+
+                    //MonoBehaviour ff = enemy.GetComponent<MonoBehaviour>();
+                    //enemy.GetComponent<ff.GetType().Name>().TakeDamage(attackDamage);
+                    
+                    enemy.SendMessage("TakeDamage", attackDamage);
+
                     break;
                 }
             }
@@ -129,8 +134,7 @@ public class TheKnight : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        if(attackPoint != null)
-        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+        if(attackPoint != null) Gizmos.DrawWireSphere(attackPoint.position, attackRange);
     }
 
     private void CharacterMovement()
@@ -167,8 +171,17 @@ public class TheKnight : MonoBehaviour
         }
     }
 
+    private float opacity = 1f;
     private void Die()
     {
+        opacity -= Time.fixedDeltaTime;
+        spriteRenderer.color = new Color(1f, 1f, 1f, opacity);
         
+        
+        transform.position = 
+            Vector2.Lerp(
+                transform.position, 
+                new Vector2(transform.position.x, -3f), 
+                Time.fixedDeltaTime);
     }
 }
