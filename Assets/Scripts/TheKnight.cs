@@ -8,11 +8,17 @@ public class TheKnight : MonoBehaviour
 {
     // Character Specialties
     [SerializeField] [Range(1,10)] private int health = 3;
-    [SerializeField] [Range(1, 3)] private float movementSpeed = 1f;
-
     private int currentHealth;
+    
+    [SerializeField] [Range(1, 5)] private float movementSpeed = 1f, attackSpeed = 1f;
+    private float defaultAnimSpeed, movementAnimSpeed, attackAnimSpeed;
+
     [SerializeField] private int attackDamage = 1;
     [SerializeField] private float attackRange = 0.5f;
+
+    [SerializeField] private float rayDistance = 45f;
+    [SerializeField] private LayerMask[] baseMasks;
+    private LayerMask selectedRayIgnoreMask;
     
     private Transform attackPoint; // Character attack point reference object, it assigns from child when the game has started.
     
@@ -34,6 +40,7 @@ public class TheKnight : MonoBehaviour
     
     private void Start()
     {
+        
         currentHealth = health;
 
         healthBar = transform.Find("Canvas/HealthBar").GetComponent<Image>();
@@ -42,7 +49,23 @@ public class TheKnight : MonoBehaviour
         attackPoint = transform.Find("AttackPoint");
         movementDirection = transform.CompareTag("friend") ? Vector2.right : Vector2.left;
 
+        if (transform.CompareTag("friend")) {
+            movementDirection = Vector2.right;
+            selectedRayIgnoreMask = baseMasks[0];
+        }
+        else {
+            movementDirection = Vector2.left;
+            selectedRayIgnoreMask = baseMasks[1];
+        }
+
+
         spriteRenderer = GetComponent<SpriteRenderer>();
+
+        defaultAnimSpeed = 0.07f; // 0.01 faster, 0.1 slower animation
+        movementAnimSpeed = 1/movementSpeed * defaultAnimSpeed;
+        attackAnimSpeed = 1/attackSpeed * defaultAnimSpeed;
+        
+        attackSpeed = 1/attackSpeed * 0.5f;
     }
 
     private void Update()
@@ -52,13 +75,14 @@ public class TheKnight : MonoBehaviour
 
     private RaycastHit2D DrawRay()
     {
-        Debug.DrawRay(transform.position, transform.TransformDirection(movementDirection)*45f, Color.blue);
+        Debug.DrawRay(transform.position, transform.TransformDirection(movementDirection)*rayDistance, Color.blue);
 
         RaycastHit2D hit = 
             Physics2D.Raycast(
                 transform.position, 
                 transform.TransformDirection(movementDirection), 
-                45f);
+                rayDistance,
+                ~selectedRayIgnoreMask);
         
         return hit;
     }
@@ -87,22 +111,22 @@ public class TheKnight : MonoBehaviour
         switch (characterState)
         {
             case CharacterStates.idle:
-                CharacterAnimation(idleSprites); 
+                CharacterAnimation(idleSprites, defaultAnimSpeed); 
                 break;
             case CharacterStates.walk:
                 CharacterMovement();
-                CharacterAnimation(walkSprites);
+                CharacterAnimation(walkSprites, movementAnimSpeed);
                 break;
             case CharacterStates.attack:
                 HitOverlap();
-                CharacterAnimation(attackSprites);
+                CharacterAnimation(attackSprites, attackAnimSpeed);
                 break;
             case CharacterStates.dead:
-                Die();
-                CharacterAnimation(deadSprites, false);
+                Invoke("Die",1f);
+                CharacterAnimation(deadSprites, defaultAnimSpeed, false);
                 break;
             
-            default: CharacterAnimation(idleSprites); break;
+            default: CharacterAnimation(idleSprites, defaultAnimSpeed); break;
         }
     }
 
@@ -110,14 +134,14 @@ public class TheKnight : MonoBehaviour
     private void HitOverlap()
     {
         hitDelay += Time.fixedDeltaTime;
-        if (hitDelay >= 0.5f)
+        if (hitDelay >= attackSpeed)
         {
             Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange);
             foreach (Collider2D enemy in hitEnemies)
             {
                 if (!enemy.CompareTag(transform.tag))
                 {
-                    Debug.Log("We hit enemy! " + enemy.name);
+                    // Debug.Log("We hit enemy! " + enemy.name);
 
                     //MonoBehaviour ff = enemy.GetComponent<MonoBehaviour>();
                     //enemy.GetComponent<ff.GetType().Name>().TakeDamage(attackDamage);
@@ -131,7 +155,6 @@ public class TheKnight : MonoBehaviour
             hitDelay = 0;
         }
     }
-
     private void OnDrawGizmosSelected()
     {
         if(attackPoint != null) Gizmos.DrawWireSphere(attackPoint.position, attackRange);
@@ -141,11 +164,11 @@ public class TheKnight : MonoBehaviour
     {
         transform.Translate(movementDirection * movementSpeed * Time.fixedDeltaTime);
     }
-    
-    private void CharacterAnimation(Sprite[] animSprites, bool animLoop=true)
+
+    private void CharacterAnimation(Sprite[] animSprites, float animSpeed, bool animLoop=true)
     {
         spriteDelay += Time.fixedDeltaTime;
-        if (spriteDelay >= 0.05f)
+        if (spriteDelay >= animSpeed)
         {
             spriteRenderer.sprite = animSprites[spriteCounter];
             if (animSprites.Length > spriteCounter+1)
@@ -171,17 +194,18 @@ public class TheKnight : MonoBehaviour
         }
     }
 
-    private float opacity = 1f;
+    private float deathOpacity = 1f;
     private void Die()
     {
-        opacity -= Time.fixedDeltaTime;
-        spriteRenderer.color = new Color(1f, 1f, 1f, opacity);
-        
-        
-        transform.position = 
-            Vector2.Lerp(
-                transform.position, 
-                new Vector2(transform.position.x, -3f), 
-                Time.fixedDeltaTime);
+        deathOpacity -= Time.fixedDeltaTime*0.5f;
+        if (deathOpacity > 0)
+        {
+            spriteRenderer.color = new Color(1f, 1f, 1f, deathOpacity);
+            if (deathOpacity <= 0.3f)
+                transform.position = Vector2.Lerp(transform.position, new Vector2(transform.position.x, -4f), Time.fixedDeltaTime*1.5f);
+        }
+        else {
+            Destroy(gameObject);
+        }
     }
 }

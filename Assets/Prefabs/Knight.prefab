@@ -209,6 +209,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   health: 3
   movementSpeed: 1
+  attackSpeed: 1
+  attackDamage: 1
+  attackRange: 0.5
+  rayDistance: 45
+  baseMasks:
+  - serializedVersion: 2
+    m_Bits: 128
+  - serializedVersion: 2
+    m_Bits: 256
   idleSprites:
   - {fileID: 21300000, guid: aced177d78bc34d30b905e454e326f36, type: 3}
   - {fileID: 21300000, guid: 2e19deec5aefb416995c743a38ce6f7c, type: 3}

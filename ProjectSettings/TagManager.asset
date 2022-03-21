@@ -3,7 +3,11 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - friend
+  - enemy
+  - enemyBase
+  - friendBase
   layers:
   - Default
   - TransparentFX
@@ -12,8 +16,8 @@ TagManager:
   - Water
   - UI
   - 
-  - 
-  - 
+  - PlayerBaseLayer
+  - EnemyBaseLayer
   - 
   - 
   - 
