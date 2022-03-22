@@ -30,7 +30,7 @@ public class UiControls : MonoBehaviour
         {
             Instantiate(
                 knight, 
-                new Vector3(playerBase.transform.position.x + 1f, knight.transform.position.y, 0), 
+                new Vector3(playerBase.transform.position.x + 1.5f, knight.transform.position.y, 0), 
                 Quaternion.Euler(0, 0, 0));
 
             playerBase.GetComponent<PlayerBase>().gold -= knightCost;

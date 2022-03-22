@@ -201,8 +201,8 @@ public class TheKnight : MonoBehaviour
         if (deathOpacity > 0)
         {
             spriteRenderer.color = new Color(1f, 1f, 1f, deathOpacity);
-            if (deathOpacity <= 0.3f)
-                transform.position = Vector2.Lerp(transform.position, new Vector2(transform.position.x, -4f), Time.fixedDeltaTime*1.5f);
+            if (deathOpacity < 0.5f)
+                transform.position = Vector2.Lerp(transform.position, new Vector2(transform.position.x, -3f), Time.fixedDeltaTime*1.5f);
         }
         else {
             Destroy(gameObject);
