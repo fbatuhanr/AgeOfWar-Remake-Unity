@@ -28,10 +28,11 @@ public class UiControls : MonoBehaviour
     {
         if (Time.time >= timeStamp && playerBase.GetComponent<PlayerBase>().gold >= knightCost)
         {
-            Instantiate(
+            GameObject newSpawn = Instantiate(
                 knight, 
                 new Vector3(playerBase.transform.position.x + 1.5f, knight.transform.position.y, 0), 
                 Quaternion.Euler(0, 0, 0));
+            newSpawn.transform.parent = playerBase.transform;
 
             playerBase.GetComponent<PlayerBase>().gold -= knightCost;
             

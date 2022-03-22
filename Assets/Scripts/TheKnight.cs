@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -47,7 +48,6 @@ public class TheKnight : MonoBehaviour
         
         
         attackPoint = transform.Find("AttackPoint");
-        movementDirection = transform.CompareTag("friend") ? Vector2.right : Vector2.left;
 
         if (transform.CompareTag("friend")) {
             movementDirection = Vector2.right;
@@ -185,12 +185,17 @@ public class TheKnight : MonoBehaviour
     public void TakeDamage(int damage)
     {
         currentHealth -= damage;
-        healthBar.fillAmount = (float)currentHealth / (float)health;
-
-        if (currentHealth <= 0)
-        {
+        healthBar.fillAmount = (float) currentHealth / (float) health;
+        
+        if(currentHealth <= 0) {
+            
             GetComponent<Collider2D>().enabled = false;
             characterState = CharacterStates.dead;
+            
+            if (transform.CompareTag("friend"))
+                GameObject.FindWithTag("enemyBase").GetComponent<EnemyBase>().gold += 50;
+            else
+                GameObject.FindWithTag("friendBase").GetComponent<PlayerBase>().gold += 50;
         }
     }
 
