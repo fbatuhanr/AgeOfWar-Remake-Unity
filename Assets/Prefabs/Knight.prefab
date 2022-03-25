@@ -208,7 +208,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   health: 3
-  movementSpeed: 1
+  movementSpeed: 2
   attackSpeed: 1
   attackDamage: 1
   attackRange: 0.5

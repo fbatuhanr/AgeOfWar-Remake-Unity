@@ -190,6 +190,7 @@ public class TheKnight : MonoBehaviour
         if(currentHealth <= 0) {
             
             GetComponent<Collider2D>().enabled = false;
+            spriteRenderer.sortingOrder = -1;
             characterState = CharacterStates.dead;
             
             if (transform.CompareTag("friend"))
