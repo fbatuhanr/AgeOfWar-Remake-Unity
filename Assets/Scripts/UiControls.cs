@@ -47,7 +47,7 @@ public class UiControls : MonoBehaviour
 
     private void Update() 
     {
-        Debug.Log(Time.time - timeStamp < 0 ? (Time.time - timeStamp)*-1 < 0.5f ?  : "");
+        // Debug.Log(Time.time - timeStamp < 0 ? (Time.time - timeStamp)*-1 < 0.5f ?  : "");
         // knightImage.fillAmount = -1/(Time.time - timeStamp) > 0 ? -1/(Time.time - timeStamp) : knightImage.fillAmount;
     }
 }
